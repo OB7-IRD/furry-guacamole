@@ -232,13 +232,13 @@ class AVDTH():
         #     print("Width: " + str(row.column_size))
 
     def get_operation_label(self, c_opera):
-        """[summary]
+        """Retourne le nom de l'opération associé au code
         
         Arguments:
-            c_opera {[type]} -- [description]
+            c_opera {int} -- le code de l'opération
         
         Returns:
-            [type] -- [description]
+            string -- le nom de l'opération associé au code
         """
         params = [str(c_opera)]        
         cursor = self.connection.cursor()
