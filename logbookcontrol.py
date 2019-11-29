@@ -239,7 +239,8 @@ class AVDTH():
         
         Returns:
             [type] -- [description]
-        """params = [str(c_opera)]        
+        """
+        params = [str(c_opera)]        
         cursor = self.connection.cursor()
         cursor.execute("select L_OPERA from OPERA WHERE C_OPERA= ? ",
                        params)
@@ -253,7 +254,8 @@ class AVDTH():
         
         Returns:
             string -- le nom de l'espece associé au code
-        """params = [str(specie)]        
+        """
+        params = [str(specie)]        
         cursor = self.connection.cursor()
         cursor.execute("select C_ESP_3L from ESPECE WHERE C_ESP= ? ",
                        params)
