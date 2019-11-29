@@ -1,0 +1,4 @@
+plotly==4.3.0
+pandas==0.25.2
+pyodbc==4.0.27
+notebook>=5.3
