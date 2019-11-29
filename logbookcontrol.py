@@ -68,6 +68,16 @@ class AVDTH():
         cursor.execute("select count(*) from ACTIVITE WHERE C_BAT= ? AND D_DBQ= ?", params)
         return cursor.fetchone()
 
+    def count_catches_for_trip(self, c_bat, d_dbq):
+        """
+        Compte le nombre de captures élémentaires pour la marée
+        :return: le nombre de captures élémentaires
+        """
+        params = [str(c_bat), d_dbq]
+        cursor = self.connection.cursor()
+        cursor.execute("select count(*) from CAPT_ELEM WHERE C_BAT= ? AND D_DBQ= ?", params)
+        return cursor.fetchone()     
+
     def count_activity(self):
         """
         Compte le nombre d'activités dans la base
@@ -134,9 +144,9 @@ class AVDTH():
     def list_all_activities_from_trip(self, c_bat, d_dbq):
         """
         Liste les activités présentes dans la base pour une marée donnée
-        :param c_bat:
-        :param c_dbq:
-        :return: une liste des activités
+        :param c_bat: le code bateau de la marée
+        :param c_dbq: la date de débarquement de la marée
+        :return: une liste des activités de la marée
         """
         params = [str(c_bat), d_dbq]
         cursor = self.connection.cursor()
@@ -153,9 +163,52 @@ class AVDTH():
                 d['M_ACT'] = 0
             d['D_ACT_FULL'] = d['D_ACT'].replace(hour=d['H_ACT'], minute=d['M_ACT'])
             d['D_ACT'] = d['D_ACT'].replace(hour=0, minute=0)
+            d['ID_ACT'] = d['D_ACT'].strftime("%d-%m-%Y") + "[" + str(d['N_ACT']) + "]"            
+            d['V_CAPT'] = self.get_weight_catches_from_activities(c_bat, d_dbq, d['D_ACT'], d['N_ACT'])            
+            results.append(d)
+        return results
+
+    def list_all_catches_from_trip(self, c_bat, d_dbq):
+        """
+        Liste les captures présentes dans la base pour une marée donnée
+        :param c_bat: le code bateau de la marée
+        :param c_dbq: la date de débarquement de la marée
+        :return: une liste des captures
+        """
+        params = [str(c_bat), d_dbq]
+        cursor = self.connection.cursor()
+        cursor.execute("select * from CAPT_ELEM WHERE C_BAT= ? AND D_DBQ= ? ORDER BY C_BAT, D_DBQ, D_ACT  ASC",
+                       params)
+        columns = [column[0] for column in cursor.description]
+        results = []
+        rows = cursor.fetchall()
+        for row in rows:
+            d = dict(zip(columns, row))
+            d['D_ACT'] = d['D_ACT'].replace(hour=0, minute=0)
             d['ID_ACT'] = d['D_ACT'].strftime("%d-%m-%Y") + "[" + str(d['N_ACT']) + "]"
             results.append(d)
         return results
+
+    def get_weight_catches_from_activities(self, c_bat, d_dbq, d_act, n_act):
+        """
+        Retourne le poids des captures pour une activité donnée
+        :param c_bat: le code bateau de la marée
+        :param c_dbq: la date de débarquement de la marée
+        :param d_act: la date d'activité
+        :param n_act: le numéro de l'activité
+        :return: le poids des captures
+        """
+        params = [str(c_bat), d_dbq, d_act, str(n_act)]
+        cursor = self.connection.cursor()
+        cursor.execute("select * from CAPT_ELEM WHERE C_BAT= ? AND D_DBQ= ? AND D_ACT= ? AND N_ACT= ? ORDER BY C_BAT, D_DBQ, D_ACT  ASC",
+                       params)
+        columns = [column[0] for column in cursor.description]
+        results = 0
+        rows = cursor.fetchall()
+        for row in rows:
+            d = dict(zip(columns, row))
+            results += d["V_POIDS_CAPT"]
+        return results       
 
     def list_all_activities(self):
         """
@@ -179,14 +232,32 @@ class AVDTH():
         #     print("Width: " + str(row.column_size))
 
     def get_operation_label(self, c_opera):
-        """
-
-        """
-        params = [str(c_opera)]
+        """[summary]
+        
+        Arguments:
+            c_opera {[type]} -- [description]
+        
+        Returns:
+            [type] -- [description]
+        """params = [str(c_opera)]        
         cursor = self.connection.cursor()
         cursor.execute("select L_OPERA from OPERA WHERE C_OPERA= ? ",
                        params)
         return cursor.fetchone()[0]
+
+    def get_specie_label(self, specie):
+        """Retourne le nom de l'espèce associé au code
+        
+        Arguments:
+            specie {int} -- le code de l'espece
+        
+        Returns:
+            string -- le nom de l'espece associé au code
+        """params = [str(specie)]        
+        cursor = self.connection.cursor()
+        cursor.execute("select C_ESP_3L from ESPECE WHERE C_ESP= ? ",
+                       params)
+        return cursor.fetchone()[0]        
 
 
 def compare_data_test():
